@@ -1,0 +1,8 @@
+three terminals
+
+vertx run Reply.java -cluster -cluster-host 127.0.0.1
+vertx run Reply.java -cluster -cluster-host 127.0.0.1
+vertx run Sender.java -cluster -cluster-host 127.0.0.1
+
+
+

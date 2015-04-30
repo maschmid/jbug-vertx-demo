@@ -1,0 +1,7 @@
+
+vertx run Server.java
+
+vertx run Server.java -instances 4
+
+ab -n 1000 -c 64 http://127.0.0.1:8080/?n=10000
+

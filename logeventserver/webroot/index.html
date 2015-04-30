@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Events</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="jquery-1.11.2.min.js"></script>
+<script src="sockjs.min.js"></script>
+<script src="vertxbus.js"></script>
+
+<script src="d3.js"></script>
+<script src="nv.d3.js"></script>
+<link href="nv.d3.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+	<script>
+
+  var rules = [];
+  var rules_data = {}
+
+  var realtimerule = null;
+
+  var agc_errors = [];
+  var agc_warnings = [];
+  var agc_unreceived = [];
+  var agc_index = 0;
+
+  function initialData() {
+	  for (var i = 0; i < 60; ++i) {
+		agc_index++;
+	  	agc_errors.push({x:i, y:0});
+	  	agc_warnings.push({x:i, y:0});
+	  	agc_unreceived.push({x:i, y:0});
+	  }
+  }
+
+  initialData();
+
+  var chart = nv.models.multiBarChart()
+  .showControls(true)
+  .showXAxis(false)
+  //.margin({left: 100})  //Adjust chart margins to give the x-axis some breathing room.
+  //.useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
+  //.transitionDuration(50)  //how fast do you want the lines to transition?
+  //.showLegend(false)       //Show the legend, allowing users to turn on/off line series.
+  //.showYAxis(true)        //Show the y-axis
+  //.showXAxis(false)        //Show the x-axis
+;
+
+  var eb = new vertx.EventBus("/eventbus/");
+
+  function connect() {
+    eb = new vertx.EventBus("/eventbus/");
+    eb.onopen = function () {
+      /*eb.registerHandler("rule.error", function (msg) {
+        $('#messages').append(msg.entry.message + "\n");
+      });*/
+
+      eb.registerHandler("aggregatedcounts", function (msg) {
+
+          agc_index++;
+
+          for (var ruleid in msg) {
+              if (ruleid in rules_data) {
+                  rules_data[ruleid].push({x: agc_index, y: msg[ruleid]});
+                  rules_data[ruleid].shift();
+              }
+              else {
+            	  refreshRules();
+              }
+          }
+          
+    	  /*agc_errors.push({x: agc_index, y: msg["error"]});
+    	  agc_warnings.push({x: agc_index, y: msg["warning"]});
+    	  agc_unreceived.push({x: agc_index, y: msg["unreceived"]});*/
+
+    	  /*
+    	  if (agc_errors.length > 60) {
+    		  agc_errors.shift();
+    		  agc_warnings.shift();
+    		  agc_unreceived.shift();
+          }*/
+
+          
+
+	      d3.select('#chart svg')
+          .datum(agc_data())
+          .transition().duration(50)
+          .call(chart);
+
+	      nv.utils.windowResize(chart.update);
+        });
+    };
+  }
+
+  function agc_data() {
+	  ret = [];
+	  for (var i in rules) {
+		  var ruleid = rules[i];
+
+		  ret.push({values: rules_data[ruleid].slice(), key: ruleid});
+	  }
+
+	  return ret;
+		  
+	  /*
+	  return [
+	          {
+	            values: agc_errors.slice(),      
+	            key: 'Errors', 
+	            color: '#ff7f0e'  
+	          },
+	          {
+	            values: agc_warnings.slice(),
+	            key: 'Warnings',
+	            color: '#2ca02c'
+	          },
+	          {
+	            values: agc_unreceived.slice(),
+	            key: 'Unreceived',
+	            color: '#7777ff'
+	          }
+	        ];*/
+  }
+
+  function addGraph() {
+	  nv.addGraph(function() {
+
+
+		  chart.xAxis     //Chart x-axis settings
+		      .axisLabel('Time (s)')
+		      .tickFormat(d3.format(',r'));
+
+		  chart.yAxis     //Chart y-axis settings
+		      .axisLabel('Events')
+		      .tickFormat(d3.format('1.0f'));
+
+		  /* Done setting the chart up? Time to render it!*/
+		  var myData = agc_data();   //You need data...
+
+		  d3.select('#chart svg')    //Select the <svg> element you want to render the chart in.   
+		      .datum(myData)         //Populate the <svg> element with chart data...
+		      .call(chart);          //Finally, render the chart!
+
+		  //Update the chart when window resizes.
+		  nv.utils.windowResize(function() { chart.update() });
+		  return chart;
+		});
+	   }
+
+  function createrule() {
+      var rule = {};
+      rule["id"] = $("#rule_id").val();
+      rule["regex"] = $("#rule_regex").val();
+      rule["field"] = "message";
+      rule["type"] = "regex";
+
+      $.ajax({
+    	  url:"/rules",
+    	  type:"POST",
+    	  data:JSON.stringify(rule),
+    	  contentType:"application/json; charset=utf-8",
+    	  dataType:"json",
+    	  success: function(){
+    		$( "#reply" ).html( "Rule saved!" );
+    	  }
+    	});
+  }
+
+  function realTimeRuleHandler(msg) {
+	  $("#messages").append(msg.entry.message);
+	  $("#messages").append("<br/>");
+  }
+
+  function createRuleButton(ruleid, title) {
+	  var button = $("<button>" + title + "</button>");
+	  button.click(function() {
+		  // alert(ruleid);
+		  
+		  var oldrealtimerule = realtimerule;
+		  
+		  if (realtimerule != null) {
+			  eb.unregisterHandler(realtimerule, realTimeRuleHandler);
+			  realtimerule = null;
+		  }
+
+		  if (oldrealtimerule != "rule." + ruleid) {
+		  	$("#messages").empty();
+		  }
+
+		  if (ruleid != null && oldrealtimerule != "rule." + ruleid) {
+		  	eb.registerHandler("rule." + ruleid, realTimeRuleHandler);
+		  	realtimerule = "rule." + ruleid;
+		  }
+		  
+      });
+
+      return button;
+  }
+
+  function refreshRules() {
+	  $.ajax({
+    	  url:"/rules",
+    	  type:"GET",
+    	  success: function(data) {
+        	  rules = [];
+
+        	  $("#rules").empty();
+
+			  $("#rules").append(createRuleButton(null, "Clear"));
+        	  
+    		  for (var i in data) {
+        		  var rule = data[i];
+    			  rules.push(rule.id);
+
+    			  if (!(rule.id in rules_data)) {
+        			  var ruledata = [];
+        			  for (var i = agc_index - 59; i <= agc_index; ++i) {
+            			  ruledata.push({x:i,y:0});
+            		   }
+           		       rules_data[rule.id] = ruledata;
+    			  }
+
+    			  var button = createRuleButton(rule.id, rule.id);
+    			  $("#rules").append(button);
+    			}
+    		// $( "#reply" ).html( "Rule saved!" );
+    	  }
+    	});
+  }
+  
+ connect();
+
+ refreshRules(); 
+
+</script>
+	<div id="chart">
+		<svg style="height: 300px"></svg>
+	</div>
+	
+	<div id="rules"></div>
+
+	<div>
+		Create Rule
+		<form>
+			Id:<input id="rule_id"></input>Regex:<input id="rule_regex"></input>
+			<button onclick="createrule(); return false;">Create</button>
+		</form>
+	</div>
+	
+	
+
+	<div id="messages"></div>
+</body>
+</html>
