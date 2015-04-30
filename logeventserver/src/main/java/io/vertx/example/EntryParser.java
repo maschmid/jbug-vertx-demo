@@ -14,7 +14,7 @@ import io.vertx.core.json.JsonObject;
 public class EntryParser {
 
 	private Handler<JsonObject> docConsumer;
-	private StringBuilder stringBuilder;
+	private StringBuilder stringBuilder = new StringBuilder();
 	private JsonObject entry;
 	private String elementName;
 
