@@ -172,6 +172,53 @@
 	  $("#messages").append("<br/>");
   }
 
+  function createDemoRulesButton() {
+	  var button = $("<button>Demo</button>");
+	  button.click(function() {
+		  var rule = {};
+	      rule["id"] = "sent";
+	      rule["regex"] = "([^ ]*) send to ([^ ]*) ([^ ]*)";
+	      rule["field"] = "message";
+	      rule["type"] = "regex";
+
+	      $.ajax({
+	    	  url:"/rules",
+	    	  type:"POST",
+	    	  data:JSON.stringify(rule),
+	    	  contentType:"application/json; charset=utf-8",
+	    	  dataType:"json",
+	    	});
+
+	      rule = {};
+	      rule["id"] = "received";
+	      rule["regex"] = "([^ ]*) receive from ([^ ]*) ([^ ]*)";
+	      rule["field"] = "message";
+	      rule["type"] = "regex";
+
+	      $.ajax({
+	    	  url:"/rules",
+	    	  type:"POST",
+	    	  data:JSON.stringify(rule),
+	    	  contentType:"application/json; charset=utf-8",
+	    	  dataType:"json",
+	    	});
+
+	      rule = {};
+	      rule["id"] = "unreceived";
+	      rule["type"] = "unreceived";
+
+	      $.ajax({
+	    	  url:"/rules",
+	    	  type:"POST",
+	    	  data:JSON.stringify(rule),
+	    	  contentType:"application/json; charset=utf-8",
+	    	  dataType:"json",
+	    	});
+	  });
+
+	  return button;
+}
+
   function createRuleButton(ruleid, title) {
 	  var button = $("<button>" + title + "</button>");
 	  button.click(function() {
@@ -207,7 +254,10 @@
 
         	  $("#rules").empty();
 
+        	 
 			  $("#rules").append(createRuleButton(null, "Clear"));
+
+			  $("#rules").append(createDemoRulesButton());
         	  
     		  for (var i in data) {
         		  var rule = data[i];

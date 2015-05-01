@@ -13,6 +13,8 @@ public class LogServerVerticle extends AbstractVerticle {
 	public void start() throws Exception {
 
 		EventBus eb = vertx.eventBus();
+		
+		String bindAddress = System.getenv("BIND_ADDRESS");
 
 		vertx.createNetServer().connectHandler(socket -> {
 
@@ -28,6 +30,6 @@ public class LogServerVerticle extends AbstractVerticle {
 				parser.endOfInput();
 			});
 
-		}).listen(8088);
+		}).listen(8088, bindAddress);
 	}
 }

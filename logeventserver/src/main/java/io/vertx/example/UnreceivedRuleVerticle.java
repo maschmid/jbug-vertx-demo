@@ -23,7 +23,7 @@ public class UnreceivedRuleVerticle extends AbstractVerticle {
 				.toObservable()
 				.map(x -> x.body());
 
-		Observable<JsonObject> jsonSent = vertx.eventBus().<JsonObject>consumer("rule.sent")
+		Observable<JsonObject> jsonSent = vertx.eventBus().<JsonObject>localConsumer("rule.sent")
 				.toObservable()
 				.map(x -> x.body());
 
@@ -34,6 +34,7 @@ public class UnreceivedRuleVerticle extends AbstractVerticle {
 				x -> Observable.timer(5000L, TimeUnit.MILLISECONDS, scheduler),
 				y -> Observable.timer(5000L, TimeUnit.MILLISECONDS, scheduler), 
 				(sent,timerOrReceived) -> {
+										
 					return new Tuple2<JsonObject, Observable<JsonObject>>(sent, timerOrReceived);
 				});
 
@@ -41,6 +42,7 @@ public class UnreceivedRuleVerticle extends AbstractVerticle {
 		Observable<Object> lonelySendEvents = timerOrReceivedAfterSendObs.map(x -> {
 			JsonObject sendEvent = x.getFirst();
 			String messageId = sendEvent.getJsonArray("groups").getString(3);
+						
 			Observable<JsonObject> timerOrReceived = x.getSecond();
 
 			return timerOrReceived.filter(tr -> { // filter out received messages for different messageIds.
@@ -80,15 +82,18 @@ public class UnreceivedRuleVerticle extends AbstractVerticle {
 		lonelySendEvents.subscribe(x -> {
 			JsonObject sendEvent = (JsonObject)x;
 
-			// System.out.println("XXX: " + sendEvent.encodePrettily());
+			System.out.println("XXX: " + sendEvent.encodePrettily());
 
 			JsonObject unreceivedEvent = new JsonObject();
 			unreceivedEvent.put("rule", "unreceived");
-			unreceivedEvent.put("entry", sendEvent.getString("entry"));
+			unreceivedEvent.put("entry", sendEvent.getJsonObject("entry"));
 			
 			vertx.eventBus().publish("rule.unreceived", unreceivedEvent);
 			vertx.eventBus().publish("rule", unreceivedEvent);
+		}, x -> {
+			x.printStackTrace();
 		});
+		
 	}
 
 	private static class Tuple2<X,Y> {

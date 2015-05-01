@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -52,7 +53,7 @@ public class RuleRegistryVerticle extends AbstractVerticle {
 		}
 		
 		DeploymentOptions options = new DeploymentOptions().setConfig(rule);
-		vertx.deployVerticle(verticleClassName, options, asyncCompletion -> {
+		vertx.deployVerticle(verticleClassName, options, (AsyncResult<String> asyncCompletion) -> {
 			if (asyncCompletion.succeeded()) {
 				String deploymentId = asyncCompletion.result();
 				ruleId2VerticleId.put(ruleId, deploymentId);
