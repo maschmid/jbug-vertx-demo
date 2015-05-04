@@ -82,7 +82,7 @@ public class UnreceivedRuleVerticle extends AbstractVerticle {
 		lonelySendEvents.subscribe(x -> {
 			JsonObject sendEvent = (JsonObject)x;
 
-			System.out.println("XXX: " + sendEvent.encodePrettily());
+			// System.out.println("XXX: " + sendEvent.encodePrettily());
 
 			JsonObject unreceivedEvent = new JsonObject();
 			unreceivedEvent.put("rule", "unreceived");

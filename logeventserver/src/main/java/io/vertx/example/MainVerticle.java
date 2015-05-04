@@ -5,6 +5,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
 
 public class MainVerticle extends AbstractVerticle {
+
 	
 	private void deployRegexVerticle(String id, String field, String regex) {
 		JsonObject config = new JsonObject()
@@ -30,8 +31,15 @@ public class MainVerticle extends AbstractVerticle {
 		
 		vertx.deployVerticle("io.vertx.example.UiServerVerticle");
 		
+		
+		
 		vertx.deployVerticle("io.vertx.example.RuleCountAggregatorVerticle");
 		
+		//RuleRegistryService.create(vertx);
 		vertx.deployVerticle("io.vertx.example.RuleRegistryVerticle");
+		
+		vertx.eventBus().<JsonObject>consumer("aggregatedcounts").handler(msg -> {
+			System.out.println("XXX received: " + msg.body().encode());
+		});
 	}
 }
