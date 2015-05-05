@@ -88,7 +88,7 @@
           .transition().duration(50)
           .call(chart);
 
-	      nv.utils.windowResize(chart.update);
+	      //nv.utils.windowResize(chart.update);
         });
     };
   }
@@ -168,7 +168,7 @@
   }
 
   function realTimeRuleHandler(msg) {
-	  $("#messages").append(msg.entry.message);
+	  $("#messages").append("<tr><td>" + msg.entry.timestamp + "</td><td>" + msg.entry.message + "</td></tr>");
 	  $("#messages").append("<br/>");
   }
 
@@ -299,7 +299,7 @@
 	</div>
 	
 	
-
-	<div id="messages"></div>
+	<table id="messages">
+	</table>
 </body>
 </html>

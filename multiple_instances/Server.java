@@ -30,7 +30,7 @@ public class Server extends AbstractVerticle {
         req.response()
           .putHeader("content-type", "text/html")
           .end("<html><body><h1>Hello from " + serverId +
-          "</h1></body></html>");
+          "</h1>Try <a href='/?n=10000'>10000!</a></body></html>");
       }
       else {
         BigDecimal bd = BigDecimal.valueOf(Integer.parseInt(query));

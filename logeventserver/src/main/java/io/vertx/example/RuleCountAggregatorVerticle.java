@@ -21,13 +21,7 @@ public class RuleCountAggregatorVerticle extends AbstractVerticle {
 
 	@Override
 	public void start() throws Exception {
-
-		Scheduler scheduler = io.vertx.rxjava.core.RxHelper.scheduler(vertx);
-
-		// Create a periodic event stream using Vertx scheduler
-		//Observable<Long> timer = Observable.
-				//timer(0, 1000, TimeUnit.MILLISECONDS, scheduler);*/
-				
+		
 		Observable<Long> timer = vertx.periodicStream(1000).toObservable();
 
 		vertx.eventBus().<JsonObject>consumer("registry.ruleCreated").handler(msg -> {
@@ -36,23 +30,18 @@ public class RuleCountAggregatorVerticle extends AbstractVerticle {
 
 		// periodically attempt to get the aggregator lock
 		vertx.setPeriodic(1000L, n -> {
-			
-			//System.out.println("XXX timer thread: " + Thread.currentThread().getName());
-			
+						
 			// Don't make more than one lock requests at once, as that just clogs the eventbus.. 
 			if (!hasAggregatorLock && !lockRequested) {
 				lockRequested = true;
 				vertx.sharedData().getLock("rulecountaggregator", lockAcquired -> {
 					
 					lockRequested = false;
-					//System.out.println("XXX getLock thread: " + Thread.currentThread().getName());
 					
 					if (lockAcquired.succeeded()) {
-						//System.out.println("XXX: RuleCountAggregatorVerticle lock acquired!");
 						hasAggregatorLock = true;
 					}
 					else {
-						//System.out.println("XXX: RuleCountAggregatorVerticle lock not acquired!");
 					}
 				});
 			}

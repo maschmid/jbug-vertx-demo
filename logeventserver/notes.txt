@@ -1,0 +1,7 @@
+
+BIND_ADDRESS=127.0.2.1 java -jar target/logeventserver-3.0.0-milestone4-fat.jar -cluster -cluster-host 127.0.0.1 -Dvertx.metrics.options.enabled=true
+
+BIND_ADDRESS=127.0.1.1 java -jar target/logeventserver-3.0.0-milestone4-fat.jar -cluster -cluster-host 127.0.0.1 -Dvertx.metrics.options.enabled=true
+
+vertx run TestClientVerticle.java 
+

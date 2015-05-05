@@ -1,7 +1,0 @@
-<entries>
-<entry><message>Hello ERROR xxx this is an error!</message><level>ERROR</level></entry>
-<entry><message>Hello WARN xxx this is a warning!</message><level>WARN</level></entry>
-<entry><message>Server1 send to Server2 XXX</message><level>INFO</level></entry>
-<entry><message>Server2 receive from Server1 XXX</message><level>INFO</level></entry>
-<entry><message>Server1 send to Server2 YYY</message><level>INFO</level></entry>
-</entries>
