@@ -1,0 +1,1 @@
+curl http://127.0.1.1:8888/foo -X POST -d foobar
